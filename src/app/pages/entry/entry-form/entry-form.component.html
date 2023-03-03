@@ -1,29 +1,10 @@
-<nav class="mb-5">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item">
-      <a routerLink="/">Home</a>
-    </li>
+<app-breadcrumb [items]="breadcrumbList"></app-breadcrumb>
 
-    <li class="breadcrumb-item">
-      <a routerLink="/entries">Lançamentos</a>
-    </li>
+<app-page-header
+  [pageHeaderTitle]="pageTitle" [pageHeaderButton]="pageHeaderButton"
+></app-page-header>
 
-    <li class="breadcrumb-item active">
-      Formulário de categorias
-    </li>
-  </ol>
-</nav>
-
-<div class="row mb-4">
-  <div class="col-md-9">
-    <h1 class="h2 border-left pl-2">{{ pageTitle }}</h1>
-  </div>
-  <div class="col-md-3">
-    <a routerLink="/entries" class="btn btn-info float-right"><< Voltar</a>
-  </div>
-</div>
-
-<form [formGroup]="entryForm" (submit)="submitForm()">
+<form [formGroup]="resourceForm" (submit)="submitForm()">
   <div class="card">
     <div class="card-header">
       Informações sobre o lançamento
@@ -40,26 +21,13 @@
               [ngValue]="option.value">{{ option.text }}</option>
           </select>
 
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('type')?.errors && entryForm.get('type')?.touched"
-          >
-            <div *ngIf="entryForm.get('type')?.errors?.['required']">Dado obrigatório</div>
-          </div>
+          <app-form-field-error [form-control]="resourceForm.get('type')"></app-form-field-error>
         </div>
 
         <div class="form-group col-md-5">
           <label for="name">Lançamento</label>
           <input type="text" class="form-control" id="name" formControlName="name">
-
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('name')?.errors && entryForm.get('name')?.touched"
-          >
-            <div *ngIf="entryForm.get('name')?.errors?.['required']">Dado obrigatório</div>
-            <div *ngIf="entryForm.get('name')?.errors?.['minlength']">Mínimo 2 caracteres</div>
-          </div>
-
+          <app-form-field-error [form-control]="resourceForm.get('name')"></app-form-field-error>
         </div>
 
         <div class="form-group col-md-3">
@@ -71,12 +39,7 @@
             <input [imask]="imaskConfig" class="form-control text-right" id="amount" formControlName="amount">
           </div>
 
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('amount')?.errors && entryForm.get('amount')?.touched"
-          >
-            <div *ngIf="entryForm.get('amount')?.errors?.['required']">Dado obrigatório</div>
-          </div>
+          <app-form-field-error [form-control]="resourceForm.get('amount')"></app-form-field-error>
 
         </div>
 
@@ -91,12 +54,8 @@
             [locale]="ptBR"
             [showButtonBar]="true"
           ></p-calendar>
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('date')?.errors && entryForm.get('date')?.touched"
-          >
-            <div *ngIf="entryForm.get('date')?.errors?.['required']">Dado obrigatório</div>
-          </div>
+
+          <app-form-field-error [form-control]="resourceForm.get('date')"></app-form-field-error>
 
         </div>
       </div>
@@ -107,20 +66,16 @@
           <div class="btn-group">
             <label
               class="btn btn-outline-info"
-              [ngClass]="{'active': entryForm.get('isPaid')?.value === true}"
+              [ngClass]="{'active': resourceForm.get('isPaid')?.value === true}"
               (click)="setPaid(true)">Pago</label>
             <label
               class="btn btn-outline-info"
-              [ngClass]="{'active': entryForm.get('isPaid')?.value === false}"
+              [ngClass]="{'active': resourceForm.get('isPaid')?.value === false}"
               (click)="setPaid(false)">Pendente</label>
           </div>
 
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('isPaid')?.errors && entryForm.get('isPaid')?.touched"
-          >
-            <div *ngIf="entryForm.get('isPaid')?.errors?.['required']">Dado obrigatório</div>
-          </div>
+          <app-form-field-error [form-control]="resourceForm.get('isPaid')"></app-form-field-error>
+
         </div>
 
         <div class="form-group col-md-3">
@@ -130,43 +85,21 @@
             [ngValue]="category.id">{{ category.name }}</option>
           </select>
 
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('categoryId')?.errors && entryForm.get('categoryId')?.touched"
-          >
-            <div *ngIf="entryForm.get('categoryId')?.errors?.['required']">Dado obrigatório</div>
-          </div>
+          <app-form-field-error [form-control]="resourceForm.get('categoryId')"></app-form-field-error>
+
         </div>
 
         <div class="form-group col-md-7">
           <label for="description">Descrição</label>
           <input type="text" class="form-control" id="description" formControlName="description">
-
-          <div
-            class="text-danger"
-            *ngIf="entryForm.get('description')?.errors && entryForm.get('description')?.touched"
-          >
-            <div *ngIf="entryForm.get('description')?.errors?.['required']">Dado obrigatório</div>
-          </div>
-
+          <app-form-field-error [form-control]="resourceForm.get('description')"></app-form-field-error>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="alert alert-danger mt-2" *ngIf="serverErrorMessage.length">
-    <strong>Erro no servidor:</strong>
-    <ul>
-      <li *ngFor="let errors of serverErrorMessage">
-        {{ errors }}
-      </li>
-    </ul>
-  </div>
+  <app-server-error-message [error-messae]="serverErrorMessage"></app-server-error-message>
 
-  <button [disabled]="submittingForm || entryForm.invalid"
+  <button [disabled]="submittingForm || resourceForm.invalid"
     class="btn btn-primary btn-lg mt-3 float-right" type="submit">Salvar</button>
 </form>
-
-<pre>
-  {{ entryForm.value | json }}
-</pre>

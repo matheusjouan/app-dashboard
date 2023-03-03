@@ -1,9 +1,13 @@
-
-export class Category {
-
-  public id!: number;
+import { BaseResourceModel } from "src/app/shared/models/base-resource.model";
+export class Category extends BaseResourceModel {
   public name!: string;
   public description!: string
 
-  constructor() {}
+  constructor() {
+    super();
+  }
+
+  static fromJson(jsonData: any): Category {
+    return Object.assign(new Category(), jsonData);
+  }
 }

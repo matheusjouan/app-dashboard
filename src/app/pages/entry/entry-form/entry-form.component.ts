@@ -1,28 +1,29 @@
+import { Component, Injector, OnInit } from '@angular/core';
+import { Validators } from '@angular/forms'
+
+import { BaseFormComponent } from 'src/app/shared/components/base-form/base-form.component';
 import { CategoryService } from './../../category/shared/category.service';
-import { Category } from './../../category/shared/category.model';
 import { EntryService } from './../shared/entry.service';
-import { Component, OnInit, AfterContentChecked } from '@angular/core';
 
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
-import { ActivatedRoute, Router } from '@angular/router';
+import { Category } from './../../category/shared/category.model';
 import { Entry } from '../shared/entry.model';
-
-import * as toastr from 'toastr';
+import { BreadcrumbItem } from 'src/app/shared/interfaces/breadcrumb-item';
+import { ButtonProps } from 'src/app/shared/interfaces/button-props';
 
 @Component({
   selector: 'app-entry-form',
   templateUrl: './entry-form.component.html',
   styleUrls: ['./entry-form.component.scss']
 })
-export class EntryFormComponent implements OnInit {
+export class EntryFormComponent extends BaseFormComponent<Entry> implements OnInit {
 
-  currenctAction!: string;
-  entryForm!: FormGroup;
-  pageTitle!: string;
-  serverErrorMessage: string[] = [];
-  submittingForm: boolean = false;
-  entry: Entry = {} as Entry;
   categories: Category[] = [];
+  breadcrumbList: BreadcrumbItem[] = [];
+  pageHeaderButton: ButtonProps = {
+    text: '<< Voltar',
+    classType: 'btn-info',
+    link: '/entries'
+  }
 
   imaskConfig =  {
     mask: Number, // o tipo da mascara
@@ -48,35 +49,23 @@ export class EntryFormComponent implements OnInit {
     clear: 'Limpar'
   }
 
+  constructor(private injector: Injector, private entryService: EntryService, private categoryService: CategoryService) {
+    super(new Entry(), injector, entryService, Entry.fromJson)
+  }
 
-  constructor(private entryService: EntryService,
-              private activatedRoute: ActivatedRoute,
-              private categoryService: CategoryService,
-              private router: Router,
-              private fb: FormBuilder) {}
-
-
-  ngOnInit(): void {
-    this.setCurrentAction();
-    this.buildEntryForm();
-    this.loadEntry();
+  override ngOnInit(): void {
+    super.ngOnInit();
+    // Carregar as categorias no dropdown
     this.loadCategories();
   }
 
-  // Chamado depois de verificar todos os conteúdos das diretivas dentro do componente
-  ngAfterContentChecked(): void {
-    this.setPageTitle();
-  }
+  override ngAfterContentChecked(): void {
+    super.ngAfterContentChecked();
 
-  public submitForm() {
-    this.submittingForm = true;
-
-    if (this.currenctAction == "new") {
-      this.createEntry();
-    }
-    else {
-      this.updateEntry();
-    }
+    this.breadcrumbList = [
+      { text: 'Lançamentos', link: '/entries' },
+      { text: this.pageTitle }
+    ]
   }
 
   get typeOptions(): Array<any> {
@@ -88,16 +77,17 @@ export class EntryFormComponent implements OnInit {
   }
 
   public setPaid(value: boolean) {
-    this.entryForm.get('isPaid')?.setValue(value);
+    this.resourceForm.get('isPaid')?.setValue(value);
   }
 
-  private setCurrentAction() {
-    this.currenctAction = this.activatedRoute.snapshot.url[0].path === 'new' ?
-      'new' : 'edit'
+  private loadCategories() {
+    this.categoryService.getAll().subscribe({
+      next: (res) => this.categories = res
+    });
   }
 
-  private buildEntryForm() {
-    this.entryForm = this.fb.group({
+  protected override buildResourceForm() {
+    this.resourceForm = this.fb.group({
       id: [null],
       name: [null, [Validators.required, Validators.minLength(2)]],
       description: [null, [Validators.required, Validators.minLength(2)]],
@@ -109,62 +99,13 @@ export class EntryFormComponent implements OnInit {
     })
   }
 
-  private loadEntry() {
-    if (this.currenctAction === 'edit') {
-      const entryId = Number(this.activatedRoute.snapshot.params['id']);
-      this.entryService.getById(entryId).subscribe({
-        next: (res) => {
-          this.entry = res;
-          // Seta os valores no formulário
-          this.entryForm.patchValue(this.entry)
-        },
-        error: (err) => alert(`Ocorreu um erro no servidor: ${err}`)
-      })
-    }
+  protected override creationPageTitle(): string {
+    return "Cadastro de Novo Lançamento"
   }
 
-  private setPageTitle() {
-    if(this.currenctAction === 'new')
-      this.pageTitle = 'Cadastro de Nova Categoria'
-    else {
-      const entryName = this.entry.name || '';
-      this.pageTitle = `Editando Categoria: ${entryName}`;
-    }
 
-  }
-
-  private createEntry() {
-    this.entryService.create(this.entryForm.value).subscribe({
-      next: (res) => this.actionsForSuccess(res),
-      error: (err) => this.actionsForError(err)
-    })
-  }
-
-  private updateEntry() {
-    this.entryService.update(this.entryForm.value).subscribe({
-      next: (res) => this.actionsForSuccess(res),
-      error: (err) => this.actionsForError(err)
-    })
-  }
-
-  private actionsForSuccess(entry: Entry) {
-    console.log(entry);
-    toastr.success("Categoria processada com sucesso");
-    this.router.navigate(['/entries', entry.id, 'edit'])
-  }
-
-  private actionsForError(err: any) {
-    toastr.error('Ocorreu um erro ao cadastrar uma nova lançamento');
-    this.submittingForm = false;
-
-    if(err.status === 404) {
-      this.serverErrorMessage = ['Falha na comunicação com o servidor'];
-    }
-  }
-
-  private loadCategories() {
-    this.categoryService.getAll().subscribe({
-      next: (res) => this.categories = res
-    });
+  protected editionPageTitle(): string {
+    const categoryName = this.resource.name || "";
+    return `Edição do Lançamento ${categoryName}`;
   }
 }

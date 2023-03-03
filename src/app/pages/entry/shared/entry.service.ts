@@ -1,86 +1,60 @@
+import { BaseResourceService } from 'src/app/shared/services/base-rsource.service';
+import { Injectable, Injector } from '@angular/core';
+import { Observable, catchError } from 'rxjs';
+import { map, mergeMap } from 'rxjs/operators';
+
 import { CategoryService } from './../../category/shared/category.service';
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of, mergeMap } from 'rxjs';
 import { Entry } from './entry.model';
+
+import * as moment from 'moment';
 
 @Injectable({
   providedIn: 'root'
 })
-export class EntryService {
+export class EntryService extends BaseResourceService<Entry> {
 
-  private apiUrl: string = 'api/entries';
-
-  constructor(private http: HttpClient,
-              private categoryService: CategoryService) { }
-
-  getAll() : Observable<Entry[]> {
-    return this.http.get<Entry[]>(this.apiUrl).pipe(
-      catchError(this.handleError),
-      map((res: Entry[]) => {
-        const entries: Entry[] = [];
-        res.forEach(element => {
-          const entry = new Entry();
-          Object.assign(entry, element)
-          entries.push(entry)
-        })
-        return entries;
-      })
-    )
+  constructor(private injector: Injector, private categoryService: CategoryService) {
+    super('api/entries', injector, Entry.fromJson);
   }
 
-  getById(id: number): Observable<Entry> {
-    const url = `${this.apiUrl}/${id}`;
-
-    return this.http.get<Entry>(url).pipe(
-      catchError(this.handleError),
-      map(this.jsonDataToEntry)
-    )
-  }
-
-  create(entry: Entry): Observable<Entry> {
-      return this.categoryService.getById(entry.categoryId).pipe(
-        mergeMap(category => {
-          entry.category = category;
-
-          return this.http.post<Entry>(this.apiUrl, entry).pipe(
-            catchError(this.handleError),
-            map(this.jsonDataToEntry)
-          )
-        })
-      )
-  }
-
-  update(entry: Entry): Observable<Entry> {
-    const url = `${this.apiUrl}/${entry.id}`;
-
+  public override create(entry: Entry): Observable<Entry> {
     return this.categoryService.getById(entry.categoryId).pipe(
       mergeMap(category => {
         entry.category = category;
+        return super.create(entry);
+      }),
+      catchError(this.handleError)
+    );
+  }
 
-        return this.http.put<Entry>(url, entry).pipe(
-          catchError(this.handleError),
-          map(() => entry))
-      })
+  public override update(entry: Entry): Observable<Entry> {
+    return this.categoryService.getById(entry.categoryId).pipe(
+      mergeMap(category => {
+        entry.category = category;
+        return super.update(entry);
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  // Fazendo na mão, caso o backend não tivesse implementado um endpoit que retorna essa resposta
+
+  public getEntriesByMonthAndYear(month: number, year: number): Observable<Entry[]> {
+    return this.getAll().pipe(
+      map(entries => this.filterByMonthAndYear(entries, month, year))
     )
   }
 
-  delete(id: number): Observable<any> {
-    const url = `${this.apiUrl}/${id}`;
+  private filterByMonthAndYear(entries: Entry[], month: number, year: number) {
+    return entries.filter(entry => {
+      // Faz o parse retornando um objeto tipo Date
+      const entryDate = moment(entry.date, "DD/MM/YYYY");
+      const monthMaches = entryDate.month() + 1 == month;
+      const yearMaches = entryDate.year() == year;
 
-    return this.http.delete(url).pipe(
-      catchError(this.handleError),
-      map(() => null)
-    )
-  }
-
-  private handleError(error: any): Observable<any> {
-    console.log(`Erro na requisição => ${error}`);
-    return of(error);
-  }
-
-  private jsonDataToEntry(jsonData: any): Entry {
-    const entry = new Entry();
-    return Object.assign(entry, jsonData);
+      if (monthMaches && yearMaches) return entry;
+      else
+        return;
+    })
   }
 }
