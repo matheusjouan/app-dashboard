@@ -1,4 +1,8 @@
+import { ButtonProps } from './../../../shared/interfaces/button-props';
+import { BreadcrumbItem } from './../../../shared/interfaces/breadcrumb-item';
 import { Component } from '@angular/core';
+
+import { BaseItemListComponent } from 'src/app/shared/components/base-item-list/base-item-list.component';
 import { CategoryService } from '../shared/category.service';
 import { Category } from '../shared/category.model';
 
@@ -7,33 +11,20 @@ import { Category } from '../shared/category.model';
   templateUrl: './category-list.component.html',
   styleUrls: ['./category-list.component.scss']
 })
-export class CategoryListComponent {
 
-  categories: Category[] = [];
+export class CategoryListComponent extends BaseItemListComponent<Category> {
 
-  constructor(private categoryService: CategoryService) {}
+  breadcrumbList: BreadcrumbItem[] = [
+    { text: 'Categorias' }
+  ]
 
-  ngOnInit(): void {
-    this.getAllCategories();
+  pageHeaderButton: ButtonProps = {
+    text: '+ Nova Categoria',
+    classType: 'btn-success',
+    link: 'new'
   }
 
-  public getAllCategories() {
-    this.categoryService.getAll().subscribe({
-      next: (res) => this.categories = res,
-      error: (err) => alert(`'Erro ao carregar a lista': ${err.message}`)
-    })
-  }
-
-  public deleteCategory(id: number) {
-    const confirmDelete = confirm('Deseja realmente excluir este item?');
-
-    if(confirmDelete) {
-      this.categoryService.delete(id).subscribe({
-        next: () => {
-          this.categories = this.categories.filter(c => c.id !== id)
-        },
-        error: (err) => alert(`'Erro ao carregar a lista': ${err.message}`)
-      })
-    }
+  constructor(protected categoryService: CategoryService) {
+    super(categoryService);
   }
 }

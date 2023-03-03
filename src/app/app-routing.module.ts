@@ -9,6 +9,13 @@ const routes: Routes = [
   {
     path: 'entries',
     loadChildren: () => import('./pages/entry/entry.module').then(m => m.EntryModule)
+  },
+  {
+    path: 'reports',
+    loadChildren: () => import('./pages/report/report.module').then(m => m.ReportModule)
+  },
+  {
+    path: '', redirectTo: '/reports', pathMatch: 'full'
   }
 ];
 

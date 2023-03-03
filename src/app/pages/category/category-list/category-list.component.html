@@ -1,23 +1,8 @@
-<nav class="mb-5">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item">
-      <a routerLink="/">Home</a>
-    </li>
+<app-breadcrumb [items]="breadcrumbList"></app-breadcrumb>
 
-    <li class="breadcrumb-item active">
-      Categorias
-    </li>
-  </ol>
-</nav>
-
-<div class="row mb-4">
-  <div class="col-md">
-    <h1 class="h2 border-left pl-2">Categorias</h1>
-  </div>
-  <div class="col-md">
-    <a routerLink="new" class="btn btn-success float-right">+ Nova Categoria</a>
-  </div>
-</div>
+<app-page-header
+  pageHeaderTitle="Categorias" [pageHeaderButton]="pageHeaderButton"
+></app-page-header>
 
 <table class="table table-hover">
   <thead>
@@ -28,14 +13,14 @@
   </thead>
 
   <tbody>
-    <tr *ngFor="let categorie of categories">
+    <tr *ngFor="let categorie of resources">
       <td>
         <strong>{{ categorie.name }}</strong><br>
         <small>{{ categorie.description }}</small>
       </td>
       <td>
         <a [routerLink]="[categorie.id, 'edit']" class="btn btn-outline-info btn-sm mr-2">Editar</a>
-        <button class="btn btn-outline-danger btn-sm" (click)="deleteCategory(categorie.id)">Remover</button>
+        <button class="btn btn-outline-danger btn-sm" (click)="deleteResource(categorie.id)">Remover</button>
       </td>
     </tr>
   </tbody>

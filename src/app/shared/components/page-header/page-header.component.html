@@ -1,0 +1,15 @@
+<div class="row mb-4">
+  <div class="col-md">
+    <h1 class="h2 border-left pl-2">{{ pageHeaderTitle }}</h1>
+  </div>
+
+  <div class="col-md text-right" *ngIf="pageHeaderButton">
+    <a
+      [routerLink]="pageHeaderButton.link"
+      class="btn"
+      [ngClass]="pageHeaderButton.classType"
+    >
+      {{ pageHeaderButton.text }}
+    </a>
+  </div>
+</div>

@@ -1,39 +1,30 @@
 import { Component } from '@angular/core';
+
+import { BaseItemListComponent } from 'src/app/shared/components/base-item-list/base-item-list.component';
 import { EntryService } from '../shared/entry.service';
 import { Entry } from '../shared/entry.model';
+import { BreadcrumbItem } from 'src/app/shared/interfaces/breadcrumb-item';
+import { ButtonProps } from 'src/app/shared/interfaces/button-props';
 
 @Component({
   selector: 'app-entry-list',
   templateUrl: './entry-list.component.html',
   styleUrls: ['./entry-list.component.scss']
 })
-export class EntryListComponent {
 
-  entries: Entry[] = [];
+export class EntryListComponent extends BaseItemListComponent<Entry> {
 
-  constructor(private entryService: EntryService) {}
+  breadcrumbList: BreadcrumbItem[] = [
+    { text: 'Lançamentos' }
+  ]
 
-  ngOnInit(): void {
-    this.getAllEntries();
+  pageHeaderButton: ButtonProps = {
+    text: '+ Novo Lançamento',
+    classType: 'btn-success',
+    link: 'new'
   }
 
-  public getAllEntries() {
-    this.entryService.getAll().subscribe({
-      next: (res) => this.entries = res,
-      error: (err) => alert(`'Erro ao carregar a lista': ${err.message}`)
-    })
-  }
-
-  public deleteEntry(id: number) {
-    const confirmDelete = confirm('Deseja realmente excluir este item?');
-
-    if(confirmDelete) {
-      this.entryService.delete(id).subscribe({
-        next: () => {
-          this.entries = this.entries.filter(c => c.id !== id)
-        },
-        error: (err) => alert(`'Erro ao carregar a lista': ${err.message}`)
-      })
-    }
+  constructor(private entryService: EntryService) {
+    super(entryService);
   }
 }
